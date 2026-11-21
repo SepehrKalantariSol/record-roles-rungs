@@ -1,0 +1,47 @@
+{
+  "about": "Which tools each role may use, and which repositories its definition is rendered into. The role files say what a role must not do; that is intent. This file is the part a tool layer can enforce. Neither is complete alone. Changed only by pull request. The main manager renders into no repository: it is the top-level session, instructed by MANAGER.md.",
+  "tools": {
+    "read": "read files",
+    "search": "search file names and contents",
+    "edit": "change existing files",
+    "write": "create files",
+    "shell": "run commands, subject to the deny list in agent-settings.json",
+    "browser": "drive a real browser against a deployed host",
+    "record": "run bin/record.py, and add new files under a ticket's evidence folder",
+    "spawn": "start another agent"
+  },
+  "repos": {
+    "record": "the engagement record: this repository",
+    "product": "the portal's codebase, which has its own AGENTS.md"
+  },
+  "roles": {
+    "main-manager": {
+      "tools": ["read", "search", "record", "spawn"],
+      "repos": []
+    },
+    "project-manager": {
+      "tools": ["read", "search", "record"],
+      "repos": ["record", "product"]
+    },
+    "implementer": {
+      "tools": ["read", "search", "edit", "write", "shell", "record"],
+      "repos": ["product"]
+    },
+    "qc": {
+      "tools": ["read", "search", "shell", "browser", "record"],
+      "repos": ["product"]
+    },
+    "design-gate": {
+      "tools": ["read", "browser", "record"],
+      "repos": ["product"]
+    },
+    "security-gate": {
+      "tools": ["read", "search", "shell", "browser", "record"],
+      "repos": ["product"]
+    },
+    "deployer": {
+      "tools": ["read", "search", "shell", "browser", "record"],
+      "repos": ["record"]
+    }
+  }
+}

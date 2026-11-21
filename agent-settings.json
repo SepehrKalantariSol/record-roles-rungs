@@ -1,0 +1,21 @@
+{
+  "about": "Commands no agent may run, whatever its role or its instructions say. Written in a neutral shape: translate each pattern into your coding agent's own permission format. A pattern denies any command that begins with it; a pattern written as a description in angle brackets denies any command that does what it describes. <app: ...> stands for the portal's own command-line entry point, with the action it would carry out described in plain words after the colon. <cluster> stands for the cluster's command-line tool, and a word in angle brackets after it stands for whichever of its commands does that.",
+  "deny": [
+    {"pattern": "git push --force", "why": "the guard cannot see a rewritten history (PRACTICE.md §1); nothing may make one"},
+    {"pattern": "git push -f", "why": "the same, short form"},
+    {"pattern": "git push --force-with-lease", "why": "still a rewrite"},
+    {"pattern": "git push --mirror", "why": "can delete and rewrite remote branches"},
+    {"pattern": "git add -A", "why": "stage paths by name, so a commit holds only what the stage meant to change"},
+    {"pattern": "git add --all", "why": "the same"},
+    {"pattern": "git add .", "why": "the same"},
+    {"pattern": "git commit -a", "why": "the same, at commit time"},
+    {"pattern": "<app: carry out pending schema changes>", "why": "the schema changes only in the migration stage, as its own job, ordered before the cutover (PRACTICE.md §9)"},
+    {"pattern": "<app: empty and rebuild the schema>", "why": "irreversible on any database that holds data"},
+    {"pattern": "<app: withdraw the newest schema change>", "why": "changes the schema outside the migration stage, one change at a time"},
+    {"pattern": "<cluster> apply", "why": "the cluster changes only through the configuration repository"},
+    {"pattern": "<cluster> delete", "why": "the same"},
+    {"pattern": "<cluster> <scale>", "why": "the same"},
+    {"pattern": "<cluster> <set-image>", "why": "the same: an image changes by a commit to the configuration repository"},
+    {"pattern": "<cluster> <rollback>", "why": "a hand rollback is undone by the next sync (PRACTICE.md §9); revert in the configuration repository instead"}
+  ]
+}

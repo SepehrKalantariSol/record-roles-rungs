@@ -1,0 +1,24 @@
+# Fails any push or pull request that edits, reorders, truncates or deletes an
+# append-only log, or changes a write-once file. See bin/guard.py for the rule
+# and for its stated limit: with no base commit, nothing is checked.
+
+name: record guard
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  guard:
+    name: write-once and append-only
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare the record with its base
+        run: python3 bin/guard.py --base "${{ github.event.pull_request.base.sha || github.event.before }}"
+
+      - name: Prove the refusals and invariants
+        run: python3 -m unittest discover -s tests -v

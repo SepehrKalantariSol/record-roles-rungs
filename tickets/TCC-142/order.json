@@ -1,0 +1,79 @@
+{
+  "ticket": "TCC-142",
+  "request_ref": "tickets/TCC-142/request.md",
+  "kind": "fix",
+  "resolved_intent": "A booking appears on every UTC day its slot overlaps: in the carrier's dispatcher list, in the shift lead's schedule and in each day's export.",
+  "grounding": [
+    {
+      "claim": "The dispatcher's booking list and the shift lead's day schedule both select a day's bookings by the date of the slot's start.",
+      "label": "verified",
+      "source": "the day query in the schedule module, line 41, at commit-finch"
+    },
+    {
+      "claim": "A slot is stored as a start and an end in UTC, and the end is exclusive: a slot that ends at 06:00 leaves the door free at 06:00.",
+      "label": "verified",
+      "source": "the clash check in the booking module, line 88, at commit-finch, and its tests"
+    },
+    {
+      "claim": "The booking in the request, carrier account 2207 at door 12 from 2030-10-21T22:30:00Z to 2030-10-22T01:30:00Z, is one stored record with that start and end.",
+      "label": "verified",
+      "source": "read-only query on production, run by the project manager at 2030-10-14T09:20:00Z"
+    },
+    {
+      "claim": "Every booking in the fixtures starts and ends between 08:00 and 12:00 on a single day.",
+      "label": "verified",
+      "source": "the booking fixtures: 12 bookings, the earliest starting 08:00, the latest ending 11:30"
+    },
+    {
+      "claim": "The day export selects its rows through the same day query.",
+      "label": "unknown",
+      "source": "not read. The export lists the same bookings as the schedule for every fixture, which does not show where it selects them; the implementer confirms in the code"
+    },
+    {
+      "claim": "The carrier filter is applied in the service layer and again by the per-carrier database view; neither is in the lines this fix changes.",
+      "label": "verified",
+      "source": "the booking service, lines 31 to 44; the view definition in migration mig-0019"
+    },
+    {
+      "claim": "Stored bookings are not to be split.",
+      "label": "verified",
+      "source": "questions.jsonl Q1, answered by the owner at 2030-10-14T13:52:00Z"
+    }
+  ],
+  "assumptions_taken": [
+    "A booking that crosses midnight shows its full start and end times on both days, not cut at 00:00, so the dock sees when the truck actually arrives and leaves. Reversible: display only."
+  ],
+  "surfaces": [
+    "day query: the schedule module",
+    "carrier dispatcher's booking list, by day",
+    "shift lead's day schedule",
+    "day export: one file per day, downloaded by dispatchers and shift leads",
+    "booking fixtures"
+  ],
+  "acceptance": [
+    {
+      "criterion": "A booking from 22:30 to 01:30 appears on both days: in the carrier dispatcher's list, in the shift lead's schedule and in each day's export.",
+      "hard_case": "awkward input at a boundary: a slot across midnight UTC, on the deployment through the hosted journey, with each day's export downloaded and read, not only the pages"
+    },
+    {
+      "criterion": "A booking that ends exactly at 00:00 appears on the first day only, on every surface.",
+      "hard_case": "the half-open end: a slot from 22:00 to 00:00 must not appear on the next day; and two back-to-back slots at one door, 23:00 to 00:00 and 00:00 to 01:00, each appear on their own day only"
+    },
+    {
+      "criterion": "A booking inside a single day is unaffected.",
+      "hard_case": "a mid-morning slot appears on its own day only, the same before and after the change"
+    },
+    {
+      "criterion": "A dispatcher at another carrier sees none of these bookings, on either day, in the list or in the export.",
+      "hard_case": "cross-tenant negative: signed in as a dispatcher at a second test carrier, expect none of the first carrier's bookings on both days and zero of its rows in both exports"
+    }
+  ],
+  "stages_required": ["implement", "qc", "release"],
+  "routing": "No schema change, no new visual pattern, and no change to auth, permissions, the tenant filter or storage: code, then QC. The cross-tenant criterion guards the filter; it does not change it.",
+  "baseline": {
+    "deployed_image": "portal:dock-notes-2030-10-04",
+    "served": "portal.tollaven.example serves portal:dock-notes-2030-10-04, per releases/2030-10-04-dock-notes.md",
+    "migration_state": "mig-0031 in place, nothing pending, measured on production at 2030-10-14T09:20:00Z"
+  },
+  "schema_change": false
+}

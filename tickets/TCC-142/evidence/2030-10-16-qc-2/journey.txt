@@ -1,0 +1,46 @@
+hosted journey   TCC-142, attempt 2
+host             staging.tollaven.example
+serving          portal:overnight-slots-rc2 (build stamp read from the rendered page)
+clock            host 2030-10-16T09:14:09Z by its response date header; runner 09:14:10Z
+run              jt-heron-02
+started          2030-10-16T09:14:10Z
+finished         2030-10-16T09:17:02Z
+
+fingerprint      before           after cleanup
+  tables         24               24
+  rows           3,100            3,100
+  content        digest-amber     digest-amber
+  migrations     mig-0031         mig-0031
+  stored objects 410              410
+  objects        digest-linden    digest-linden
+
+seeded by this run, each record carrying jt-heron-02, removed by it at cleanup
+  all for test carrier A; day 1 is 2030-10-21, day 2 is 2030-10-22; times UTC
+  door 12   day 1 22:30 to day 2 01:30   across midnight
+  door 14   day 1 22:00 to day 2 00:00   ends exactly at midnight
+  door 9    day 1 23:00 to day 2 00:00   back to back at one door,
+  door 9    day 2 00:00 to day 2 01:00     either side of midnight
+  door 3    day 1 09:30 to day 1 10:30   inside one day
+steps 2 to 7 count this run's bookings only
+
+as carrier dispatcher, test carrier A
+   1  sign in                        pass  session cookie secure, http-only, same-site
+   2  bookings for day 1             pass  doors 12, 14, 9 (23:00) and 3
+   3  bookings for day 2             pass  doors 12 and 9 (00:00); door 14 absent
+   4  export day 1, read the file    pass  4 rows: doors 12, 14, 9 (23:00) and 3
+   5  export day 2, read the file    pass  2 rows: doors 12 and 9 (00:00); door 14 absent
+as shift lead
+   6  schedule for day 1             pass  doors 12, 14, 9 (23:00) and 3; door 12 shown 22:30 to 01:30
+   7  schedule for day 2             pass  doors 12 and 9 (00:00); door 14 absent
+as carrier dispatcher, test carrier B
+   8  sign in                        pass  session cookie secure, http-only, same-site
+   9  bookings for day 1             pass  none of test carrier A's
+  10  bookings for day 2             pass  none of test carrier A's
+  11  export day 1, read the file    pass  0 rows of test carrier A's
+  12  export day 2, read the file    pass  0 rows of test carrier A's
+
+browser console  no content-security-policy violations, no failed requests
+before cleanup   +5 bookings, +4 stored objects (the exports), all carrying jt-heron-02
+after cleanup    no difference from before
+
+verdict          pass: all four criteria met at their hard case
